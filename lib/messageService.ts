@@ -1,30 +1,42 @@
+import { Prisma } from '@prisma/client';
 import * as MessageModel from './messages';
 
-export function createMessage(data: {
-  name: string;
-  email: string;
-  message: string;
-}) {
+export async function createMessage(data: { name: string; email: string; message: string }) {
   if (!data.name || !data.email || !data.message) {
     throw new Error('ข้อมูลไม่ครบ');
   }
-
-  return MessageModel.addMessage(data);
+  return await MessageModel.addMessage(data);
 }
 
-export function listMessages() {
-  return MessageModel.getMessages();
+export async function listMessages() {
+  return await MessageModel.getMessages();
 }
 
-export function getMessageById(id: string) {
-  return (
-    MessageModel.getMessages().find((m) => m.id === id) ?? null
-  );
+// 1. เพิ่ม getMessageById
+export async function getMessageById(id: string) {
+  return await MessageModel.getMessageById(id);
 }
 
-export function editMessage(
-  id: string,
-  updates: object
-) {
-  return MessageModel.updateMessage(id, updates);
+// 2. เพิ่ม editMessage พร้อมจับ Error P2025
+export async function editMessage(id: string, updates: object) {
+  try {
+    return await MessageModel.updateMessage(id, updates);
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+      return null;
+    }
+    throw err;
+  }
+}
+
+// 3. เพิ่ม removeMessage (สำหรับ DELETE) พร้อมจับ Error P2025
+export async function removeMessage(id: string) {
+  try {
+    return await MessageModel.deleteMessage(id);
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+      return null;
+    }
+    throw err;
+  }
 }

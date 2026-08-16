@@ -1,86 +1,79 @@
-// lib/messageService.ts
+import { NextResponse } from 'next/server';
+import { getMessageById, editMessage, removeMessage } from '@/lib/messageService';
 
-import { ValidationError, NotFoundError } from './errors';
+// GET: ดึงข้อมูลตาม ID
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
+  try {
+    const resolvedParams = await params;
+    const message = await getMessageById(resolvedParams.id);
 
-// 1. กำหนดโครงสร้างข้อมูลของ Message
-export interface Message {
-  id: string;
-  name: string;
-  email: string;
-  message: string;
-  createdAt: string;
+    if (!message) {
+      return NextResponse.json(
+        { error: 'ไม่พบข้อมูลข้อความ (ID ไม่ถูกต้อง)' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(message, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์' },
+      { status: 500 }
+    );
+  }
 }
 
-// 2. อาร์เรย์จำลองสำหรับเก็บข้อมูลในหน่วยความจำ (Memory)
-let messages: Message[] = [];
+// PATCH: แก้ไขข้อมูลตาม ID (จับ Error P2025 ตอบ 404)
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
+  try {
+    const resolvedParams = await params;
+    const body = await request.json();
+    
+    const updated = await editMessage(resolvedParams.id, body);
 
-// 3. ฟังก์ชันดึงข้อความทั้งหมด
-export function listMessages(): Message[] {
-  return messages;
+    if (!updated) {
+      return NextResponse.json(
+        { error: 'ไม่พบข้อมูลข้อความที่ต้องการแก้ไข (ID ไม่ถูกต้อง)' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(updated, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์' },
+      { status: 500 }
+    );
+  }
 }
 
-// 4. ฟังก์ชันดึงข้อความตาม ID (แก้ตัวแดง getMessageById)
-export function getMessageById(id: string): Message {
-  const message = messages.find((item) => item.id === id);
-  if (!message) {
-    throw new NotFoundError('ไม่พบข้อความที่ระบุ');
+// DELETE: ลบข้อมูลตาม ID (จับ Error P2025 ตอบ 404)
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
+) {
+  try {
+    const resolvedParams = await params;
+    const deleted = await removeMessage(resolvedParams.id);
+
+    if (!deleted) {
+      return NextResponse.json(
+        { error: 'ไม่พบข้อมูลข้อความที่ต้องการลบ (ID ไม่ถูกต้อง)' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ message: 'ลบข้อมูลสำเร็จ' }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์' },
+      { status: 500 }
+    );
   }
-  return message;
-}
-
-// 5. ฟังก์ชันบันทึกข้อความใหม่พร้อม Validation
-export function createMessage(data: {
-  name: string;
-  email: string;
-  message: string;
-}) {
-  if (!data.name) {
-    throw new ValidationError('กรุณากรอกชื่อของคุณ');
-  }
-  if (!data.email || !data.email.includes('@')) {
-    throw new ValidationError('รูปแบบอีเมลไม่ถูกต้อง');
-  }
-  if (!data.message) {
-    throw new ValidationError('กรุณากรอกข้อความ');
-  }
-
-  const newMessage: Message = {
-    id: Date.now().toString(),
-    name: data.name,
-    email: data.email,
-    message: data.message,
-    createdAt: new Date().toISOString(),
-  };
-
-  messages.push(newMessage);
-  return newMessage;
-}
-
-// 6. ฟังก์ชันแก้ไขข้อความ (แก้ตัวแดง editMessage)
-export function editMessage(id: string, updates: Partial<{ name: string; email: string; message: string }>): Message {
-  const messageIndex = messages.findIndex((item) => item.id === id);
-  
-  if (messageIndex === -1) {
-    throw new NotFoundError('ไม่พบข้อความที่ต้องการแก้ไข');
-  }
-
-  // อัปเดตข้อมูลเฉพาะฟิลด์ที่ส่งมา
-  messages[messageIndex] = {
-    ...messages[messageIndex],
-    ...updates,
-  };
-
-  return messages[messageIndex];
-}
-
-// 7. ฟังก์ชันลบข้อความ (แก้ตัวแดง removeMessage)
-export function removeMessage(id: string): boolean {
-  const index = messages.findIndex((item) => item.id === id);
-  
-  if (index === -1) {
-    throw new NotFoundError('ไม่พบข้อความที่ต้องการลบ');
-  }
-  
-  messages.splice(index, 1);
-  return true;
 }

@@ -1,43 +1,51 @@
-export interface ContactMessage {
-  id: string;
-  name: string;
-  email: string;
-  message: string;
-}
+import { prisma } from './prisma';
 
-let messages: ContactMessage[] = [];
-
-export function addMessage(data: {
+export async function addMessage(data: {
   name: string;
   email: string;
   message: string;
 }) {
-  const newMessage: ContactMessage = {
-    id: Date.now().toString(),
-    ...data,
-  };
-
-  messages.push(newMessage);
-
-  return newMessage;
+  return await prisma.message.create({
+    data,
+  });
 }
 
-export function getMessages() {
-  return messages;
+export async function getMessages() {
+  return await prisma.message.findMany({
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
 }
 
-export function updateMessage(
+export async function getMessageById(id: string) {
+  return await prisma.message.findUnique({
+    where: {
+      id,
+    },
+  });
+}
+
+export async function updateMessage(
   id: string,
-  updates: Partial<ContactMessage>
+  updates: {
+    message?: string;
+    name?: string;
+    email?: string;
+  }
 ) {
-  const index = messages.findIndex((m) => m.id === id);
+  return await prisma.message.update({
+    where: {
+      id,
+    },
+    data: updates,
+  });
+}
 
-  if (index === -1) return null;
-
-  messages[index] = {
-    ...messages[index],
-    ...updates,
-  };
-
-  return messages[index];
+export async function deleteMessage(id: string) {
+  return await prisma.message.delete({
+    where: {
+      id,
+    },
+  });
 }

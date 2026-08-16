@@ -1,15 +1,9 @@
-async function getMessages() {
-  const res = await fetch('http://localhost:3000/api/messages');
+import { listMessages } from '@/lib/messageService';
 
-  if (!res.ok) {
-    throw new Error('Failed to fetch messages');
-  }
-
-  return res.json();
-}
+export const dynamic = 'force-dynamic';
 
 export default async function MessagesPage() {
-  const messages = await getMessages();
+  const messages = await listMessages();
 
   return (
     <main className="p-8">
@@ -17,7 +11,7 @@ export default async function MessagesPage() {
         Messages
       </h1>
 
-      {messages.map((item: any) => (
+      {messages.map((item: { id: string; name: string; email: string; message: string }) => (
         <div
           key={item.id}
           className="border p-4 mb-3 rounded"

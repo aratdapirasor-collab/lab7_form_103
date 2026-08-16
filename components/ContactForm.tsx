@@ -3,7 +3,6 @@
 import { useState } from 'react';
 
 interface CommentFormProps {
-  postId: string;
   onCommentAdded?: () => void;
 }
 
@@ -14,7 +13,6 @@ type FormStatus =
   | 'error';
 
 export default function CommentForm({
-  postId,
   onCommentAdded,
 }: CommentFormProps) {
   const [name, setName] = useState('');
@@ -24,22 +22,28 @@ export default function CommentForm({
   const [status, setStatus] =
     useState<FormStatus>('idle');
 
-  const nameValid = name.trim().length >= 2;
+  // ตรวจสอบชื่อ
+  const nameValid =
+    name.trim().length >= 2;
 
+  // ตรวจสอบอีเมล
   const emailValid =
     email.includes('@') &&
     email.includes('.') &&
     email.trim().length >= 5;
 
+  // ตรวจสอบข้อความ
   const contentValid =
     content.trim().length >= 5 &&
     content.trim().length <= 300;
 
+  // ตรวจสอบข้อมูลทั้งหมด
   const isValid =
     nameValid &&
     emailValid &&
     contentValid;
 
+  // Validation
   function validate() {
     if (!nameValid) {
       return 'กรุณากรอกชื่ออย่างน้อย 2 ตัวอักษร';
@@ -60,11 +64,13 @@ export default function CommentForm({
     return '';
   }
 
+  // Reset สถานะเมื่อผู้ใช้แก้ไขข้อมูล
   function resetStatus() {
     setError('');
     setStatus('idle');
   }
 
+  // ส่งข้อมูล
   async function handleSubmit(
     e: React.FormEvent<HTMLFormElement>
   ) {
@@ -87,11 +93,12 @@ export default function CommentForm({
         headers: {
           'Content-Type': 'application/json',
         },
+
+        // ส่งเฉพาะข้อมูลที่ตรงกับ Prisma Message
         body: JSON.stringify({
-          postId,
-          name,
-          email,
-          message: content,
+          name: name.trim(),
+          email: email.trim(),
+          message: content.trim(),
         }),
       });
 
@@ -105,14 +112,23 @@ export default function CommentForm({
         return;
       }
 
+      // สำเร็จ
       setStatus('success');
+
+      // ล้างฟอร์ม
       setName('');
       setEmail('');
       setContent('');
 
+      // แจ้ง component แม่
       onCommentAdded?.();
-    } catch {
-      setError('ไม่สามารถเชื่อมต่อกับ Server ได้');
+
+    } catch (err) {
+      console.error('POST /api/contact error:', err);
+
+      setError(
+        'ไม่สามารถเชื่อมต่อกับ Server ได้'
+      );
       setStatus('error');
     }
   }
@@ -122,20 +138,26 @@ export default function CommentForm({
       onSubmit={handleSubmit}
       className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white/90 shadow-[0_22px_60px_-30px_rgba(37,99,235,0.45)] backdrop-blur-sm"
     >
+      {/* Header */}
       <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-sky-600 px-6 py-6 text-white">
         <div className="inline-flex rounded-full bg-white/15 px-3 py-1 text-sm font-medium text-blue-50">
           📝 แบบฟอร์มภาษาไทย
         </div>
+
         <h2 className="mt-3 text-2xl font-semibold">
           ส่งข้อความถึงเรา
         </h2>
 
         <p className="mt-1 text-sm text-blue-100">
-          กรุณากรอกข้อมูลให้ครบก่อนส่งข้อความ เพื่อให้เราตอบกลับคุณได้อย่างรวดเร็ว
+          กรุณากรอกข้อมูลให้ครบก่อนส่งข้อความ
+          เพื่อให้เราตอบกลับคุณได้อย่างรวดเร็ว
         </p>
       </div>
 
+      {/* Form */}
       <div className="space-y-5 p-6">
+
+        {/* ชื่อ */}
         <div>
           <label
             htmlFor="comment-name"
@@ -167,6 +189,7 @@ export default function CommentForm({
           )}
         </div>
 
+        {/* Email */}
         <div>
           <label
             htmlFor="comment-email"
@@ -212,6 +235,7 @@ export default function CommentForm({
           </div>
         </div>
 
+        {/* ข้อความ */}
         <div>
           <label
             htmlFor="comment-content"
@@ -254,6 +278,7 @@ export default function CommentForm({
           </div>
         </div>
 
+        {/* Error */}
         {error && (
           <div
             role="alert"
@@ -263,12 +288,14 @@ export default function CommentForm({
           </div>
         )}
 
+        {/* Success */}
         {status === 'success' && (
           <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-green-700">
             ส่งข้อความสำเร็จแล้ว ขอบคุณที่ติดต่อเรา
           </div>
         )}
 
+        {/* Submit */}
         <button
           type="submit"
           disabled={

@@ -1,64 +1,45 @@
-export interface Task {
-  id: string;
+import { prisma } from './prisma';
+
+export async function addTask(data: {
   title: string;
-  completed: boolean;
-  createdAt: string;
+  completed?: boolean;
+}) {
+  return prisma.task.create({
+    data: {
+      id: crypto.randomUUID(),
+      title: data.title,
+      completed: data.completed ?? false,
+    },
+  });
 }
 
-const tasks: Task[] = [];
-
-export function addTask(
-  data: Omit<Task, 'id' | 'createdAt'>
-) {
-  const task: Task = {
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    ...data,
-  };
-
-  tasks.push(task);
-
-  return task;
+export async function getTasks() {
+  return prisma.task.findMany({
+    orderBy: { createdAt: 'desc' },
+  });
 }
 
-export function getTasks() {
-  return tasks;
+export async function getTaskById(id: string) {
+  return prisma.task.findUnique({
+    where: { id },
+  });
 }
 
-export function getTaskById(id: string) {
-  return tasks.find((task) => task.id === id) ?? null;
-}
-
-export function updateTask(
+export async function updateTask(
   id: string,
-  updates: Partial<Task>
-) {
-  const index = tasks.findIndex(
-    (task) => task.id === id
-  );
-
-  if (index === -1) {
-    return null;
+  updates: {
+    title?: string;
+    completed?: boolean;
   }
-
-  tasks[index] = {
-    ...tasks[index],
-    ...updates,
-  };
-
-  return tasks[index];
+) {
+  return prisma.task.update({
+    where: { id },
+    data: updates,
+  });
 }
 
-export function deleteTask(id: string) {
-  const index = tasks.findIndex(
-    (task) => task.id === id
-  );
-
-  if (index === -1) {
-    return false;
-  }
-
-  tasks.splice(index, 1);
-
-  return true;
+export async function deleteTask(id: string) {
+  return prisma.task.delete({
+    where: { id },
+  });
 }
