@@ -1,42 +1,84 @@
-import { Prisma } from '@prisma/client';
-import * as MessageModel from './messages';
+// lib/messageService.ts
+import { prisma } from './prisma';
+import { cleanRichText } from './sanitize';
+import { messageSchema } from './schemas';
+import { ZodError } from 'zod';
+import { ValidationError, ForbiddenError, NotFoundError } from './errors';
 
-export async function createMessage(data: { name: string; email: string; message: string }) {
-  if (!data.name || !data.email || !data.message) {
-    throw new Error('ข้อมูลไม่ครบ');
-  }
-  return await MessageModel.addMessage(data);
-}
-
+// 1. ดึงรายการข้อความทั้งหมด (listMessages)
 export async function listMessages() {
-  return await MessageModel.getMessages();
+  return await prisma.message.findMany({
+    orderBy: { createdAt: 'desc' },
+  });
 }
 
-// 1. เพิ่ม getMessageById
+// 2. ดึงข้อความตาม ID (getMessageById)
 export async function getMessageById(id: string) {
-  return await MessageModel.getMessageById(id);
+  const message = await prisma.message.findUnique({ where: { id } });
+  if (!message) throw new NotFoundError('ไม่พบข้อความนี้');
+  return message;
 }
 
-// 2. เพิ่ม editMessage พร้อมจับ Error P2025
-export async function editMessage(id: string, updates: object) {
+// 3. สร้างข้อความใหม่ (createMessage - ใช้ Zod + Sanitize)
+export async function createMessage(raw: unknown) {
+  let data;
   try {
-    return await MessageModel.updateMessage(id, updates);
+    data = messageSchema.parse(raw);
   } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
-      return null;
+    if (err instanceof ZodError) {
+      throw new ValidationError(err.issues[0].message);
     }
     throw err;
   }
+
+  const safeMessage = cleanRichText(data.message);
+
+  return await prisma.message.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      message: safeMessage,
+    },
+  });
 }
 
-// 3. เพิ่ม removeMessage (สำหรับ DELETE) พร้อมจับ Error P2025
-export async function removeMessage(id: string) {
+// 4. แก้ไขข้อความ (editMessage - มี Authorization Check)
+export async function editMessage(id: string, updates: unknown, sessionUserId: string) {
+  const message = await getMessageById(id);
+
+  if (message.authorId && message.authorId !== sessionUserId) {
+    throw new ForbiddenError('คุณไม่มีสิทธิ์แก้ไขข้อความนี้');
+  }
+
+  let validData;
   try {
-    return await MessageModel.deleteMessage(id);
+    validData = messageSchema.partial().parse(updates);
   } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
-      return null;
+    if (err instanceof ZodError) {
+      throw new ValidationError(err.issues[0].message);
     }
     throw err;
   }
+
+  if (validData.message) {
+    validData.message = cleanRichText(validData.message);
+  }
+
+  return await prisma.message.update({
+    where: { id },
+    data: validData,
+  });
+}
+
+// 5. ลบข้อความ (removeMessage - มี Authorization Check)
+export async function removeMessage(id: string, sessionUserId: string) {
+  const message = await getMessageById(id);
+
+  if (message.authorId && message.authorId !== sessionUserId) {
+    throw new ForbiddenError('คุณไม่มีสิทธิ์ลบข้อความนี้');
+  }
+
+  return await prisma.message.delete({
+    where: { id },
+  });
 }

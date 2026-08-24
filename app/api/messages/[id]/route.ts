@@ -1,46 +1,40 @@
-import { getMessageById, editMessage, removeMessage } from '@/lib/messageService';
+// app/api/messages/[id]/route.ts
+import { editMessage, removeMessage } from '@/lib/messageService';
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  const message = await getMessageById(id);
-  if (!message) {
-    return Response.json({ error: 'ไม่พบข้อความ' }, { status: 404 });
-  }
-  return Response.json(message);
+// ฟังก์ชันดึง User ID จาก Session / Cookie
+function getSessionUserId(request: Request): string {
+  return request.headers.get('x-user-id') || 'user-1';
 }
 
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
-  const body = await request.json();
   try {
-    const updated = await editMessage(id, body);
-    if (!updated) {
-      return Response.json({ error: 'ไม่พบข้อความ' }, { status: 404 });
-    }
-    return Response.json(updated);
-  } catch (err) {
-    return Response.json({ error: (err as Error).message }, { status: 400 });
+    const sessionUserId = getSessionUserId(request);
+    const updates = await request.json();
+
+    // ส่งครบ 3 arguments: (id, updates, sessionUserId)
+    const updated = await editMessage(params.id, updates, sessionUserId);
+    return Response.json({ ok: true, item: updated });
+  } catch (err: any) {
+    const status = err.status || 400;
+    return Response.json({ error: err.message || 'เกิดข้อผิดพลาด' }, { status });
   }
 }
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
   try {
-    const deleted = await removeMessage(id);
-    if (!deleted) {
-      return Response.json({ error: 'ไม่พบข้อความ' }, { status: 404 });
-    }
+    const sessionUserId = getSessionUserId(request);
+
+    // ส่งครบ 2 arguments: (id, sessionUserId)
+    await removeMessage(params.id, sessionUserId);
     return Response.json({ ok: true });
-  } catch (err) {
-    return Response.json({ error: (err as Error).message }, { status: 400 });
+  } catch (err: any) {
+    const status = err.status || 400;
+    return Response.json({ error: err.message || 'เกิดข้อผิดพลาด' }, { status });
   }
 }
