@@ -11,7 +11,9 @@ export async function listMessages(search?: string) {
     orderBy: { createdAt: 'desc' },
   });
   if (!search) return all;
-  return all.filter((m) => m.name.includes(search) || m.message.includes(search));
+  return all.filter(
+    (m) => m.name.includes(search) || m.message.includes(search)
+  );
 }
 
 // 2. ดึงข้อความตาม ID (getMessageById)
