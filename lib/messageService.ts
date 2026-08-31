@@ -6,10 +6,14 @@ import { ZodError } from 'zod';
 import { ValidationError, ForbiddenError, NotFoundError } from './errors';
 
 // 1. ดึงรายการข้อความทั้งหมด (listMessages)
-export async function listMessages() {
-  return await prisma.message.findMany({
+export async function listMessages(search?: string) {
+  const all = await prisma.message.findMany({
     orderBy: { createdAt: 'desc' },
   });
+  if (!search) return all;
+  return all.filter(
+    (m) => m.name.includes(search) || m.message.includes(search)
+  );
 }
 
 // 2. ดึงข้อความตาม ID (getMessageById)
