@@ -38,6 +38,7 @@ export async function createMessage(raw: unknown) {
       name: data.name,
       email: data.email,
       message: safeMessage,
+      tag: data.tag,
     },
   });
 }
