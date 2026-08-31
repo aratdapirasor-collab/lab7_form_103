@@ -7,6 +7,7 @@ export default function ContactForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [content, setContent] = useState("");
+  const [tag, setTag] = useState("");
   const [message, setMessage] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -19,6 +20,11 @@ export default function ContactForm() {
 
     if (!email.includes("@") || !email.includes(".")) {
       setMessage("กรุณากรอกอีเมลให้ถูกต้อง");
+      return;
+    }
+
+    if (!tag) {
+      setMessage("กรุณาเลือกประเภทข้อความ");
       return;
     }
 
@@ -37,6 +43,7 @@ export default function ContactForm() {
           name,
           email,
           message: content,
+          tag,
         }),
       });
 
@@ -51,6 +58,7 @@ export default function ContactForm() {
       setName("");
       setEmail("");
       setContent("");
+      setTag("");
     } catch {
       setMessage("เกิดข้อผิดพลาดในการเชื่อมต่อ");
     }
@@ -65,6 +73,7 @@ export default function ContactForm() {
         <label className="mb-2 block font-medium">
           ชื่อ
         </label>
+
         <input
           type="text"
           value={name}
@@ -78,6 +87,7 @@ export default function ContactForm() {
         <label className="mb-2 block font-medium">
           อีเมล
         </label>
+
         <input
           type="email"
           value={email}
@@ -89,8 +99,27 @@ export default function ContactForm() {
 
       <div className="mb-4">
         <label className="mb-2 block font-medium">
+          ประเภทข้อความ
+        </label>
+
+        <select
+          value={tag}
+          onChange={(e) => setTag(e.target.value)}
+          className="w-full rounded-lg border px-4 py-2 outline-none"
+        >
+          <option value="">-- เลือกประเภทข้อความ --</option>
+          <option value="ทั่วไป">ทั่วไป</option>
+          <option value="สอบถาม">สอบถาม</option>
+          <option value="ปัญหา">ปัญหา</option>
+          <option value="ข้อเสนอแนะ">ข้อเสนอแนะ</option>
+        </select>
+      </div>
+
+      <div className="mb-4">
+        <label className="mb-2 block font-medium">
           ข้อความ
         </label>
+
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -115,3 +144,4 @@ export default function ContactForm() {
     </form>
   );
 }
+
