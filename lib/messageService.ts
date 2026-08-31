@@ -6,7 +6,8 @@ import { ZodError } from 'zod';
 import { ValidationError, ForbiddenError, NotFoundError } from './errors';
 
 // 1. ดึงรายการข้อความทั้งหมด (listMessages)
-// Main branch version for conflict practice
+// A VERSION: main conflict practice
+
 export async function listMessages(search?: string) {
   const all = await prisma.message.findMany({
     orderBy: { createdAt: 'desc' },
