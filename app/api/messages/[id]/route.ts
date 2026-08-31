@@ -8,14 +8,15 @@ function getSessionUserId(request: Request): string {
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const sessionUserId = getSessionUserId(request);
     const updates = await request.json();
 
     // ส่งครบ 3 arguments: (id, updates, sessionUserId)
-    const updated = await editMessage(params.id, updates, sessionUserId);
+    const updated = await editMessage(id, updates, sessionUserId);
     return Response.json({ ok: true, item: updated });
   } catch (err: any) {
     const status = err.status || 400;
@@ -25,13 +26,14 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const sessionUserId = getSessionUserId(request);
 
     // ส่งครบ 2 arguments: (id, sessionUserId)
-    await removeMessage(params.id, sessionUserId);
+    await removeMessage(id, sessionUserId);
     return Response.json({ ok: true });
   } catch (err: any) {
     const status = err.status || 400;
