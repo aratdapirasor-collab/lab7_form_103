@@ -5,7 +5,7 @@ import { messageSchema } from './schemas';
 import { ZodError } from 'zod';
 import { ValidationError, ForbiddenError, NotFoundError } from './errors';
 
-// 1. ดึงรายการข้อความทั้งหมด (listMessages)
+// 1. ดึงรายการข้อความทั้งหมด (listMessages - main branch tag version)
 export async function listMessages() {
   return await prisma.message.findMany({
     orderBy: { createdAt: 'desc' },
