@@ -17,6 +17,7 @@ export default function CommentForm({
 }: CommentFormProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [tag, setTag] = useState('General');
   const [content, setContent] = useState('');
   const [error, setError] = useState('');
   const [status, setStatus] =
@@ -99,6 +100,7 @@ export default function CommentForm({
           name: name.trim(),
           email: email.trim(),
           message: content.trim(),
+          tag,
         }),
       });
 
@@ -118,6 +120,7 @@ export default function CommentForm({
       // ล้างฟอร์ม
       setName('');
       setEmail('');
+      setTag('General');
       setContent('');
 
       // แจ้ง component แม่
@@ -233,6 +236,31 @@ export default function CommentForm({
               </span>
             )}
           </div>
+        </div>
+
+        {/* Tag (หัวข้อ/หมวดหมู่) */}
+        <div>
+          <label
+            htmlFor="comment-tag"
+            className="mb-2 block font-semibold text-slate-800"
+          >
+            หมวดหมู่ (Tag)
+          </label>
+
+          <select
+            id="comment-tag"
+            value={tag}
+            onChange={(e) => {
+              setTag(e.target.value);
+              resetStatus();
+            }}
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 text-slate-800"
+          >
+            <option value="General">General (ทั่วไป)</option>
+            <option value="Question">Question (สอบถาม)</option>
+            <option value="Feedback">Feedback (ข้อเสนอแนะ)</option>
+            <option value="Bug Report">Bug Report (แจ้งปัญหา)</option>
+          </select>
         </div>
 
         {/* ข้อความ */}
