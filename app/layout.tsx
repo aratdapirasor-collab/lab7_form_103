@@ -29,7 +29,7 @@ export default function RootLayout({
 
           <footer className="border-t border-slate-200 bg-white/90 py-6 text-center text-sm text-slate-500 backdrop-blur-sm">
             <p>© 2026 My Blog — สร้างด้วย Next.js + TypeScript</p>
-            <p className="mt-1">0214321 Web App Design & Development</p>
+            <p className="mt-1">0214321 Web App Design & Development · <span className="text-emerald-600 font-medium">✓ Vercel Preview Verified (Lab 12)</span></p>
           </footer>
         </div>
       </body>
