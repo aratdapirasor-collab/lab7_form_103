@@ -31,3 +31,24 @@
 - **Data Persistence**: การใช้ฐานข้อมูลจริงทำให้ข้อมูลคงทนอยู่ถาวร (Persistent Data) ข้อมูลไม่สูญหายเมื่อ Restart Application Server ต่างจาก Array ในหน่วยความจำที่จะลบหายทั้งหมดเมื่อโปรเซสหยุดทำงาน
 - **Data Integrity & Safety**: ฐานข้อมูลทำหน้าที่ตรวจเช็ค Data Constraints (`@unique`, Data Types) ในระดับ Engine ป้องกันข้อมูลขัดแย้งหรือ Data Corruption จาก Concurrent Requests
 - **Scalability & Production Ready**: สามารถขยายขนาด ปรับแต่ง Indexing และเรียงลำดับข้อมูล (`orderBy`) ได้อย่างมีประสิทธิภาพ รองรับ Production Environment
+
+---
+
+## Task W.12 — Team Deployment Readiness Checklist & Reflection (Lab Week 12)
+
+### 1. Deployment Readiness Checklist (รายการเตรียมความพร้อมก่อน Deploy)
+
+| ลำดับ | รายการตรวจสอบ (Checklist Item) | คำอธิบาย & ข้อปฏิบัติตามมาตรฐานทีม |
+| :---: | :--- | :--- |
+| **1** | **Rollback Authority & Team Notification** | กำหนดสิทธิ์ผู้กด **Instant Rollback** บน Vercel เฉพาะ Lead/DevOps และต้องแจ้งเตือนทีมทาง Discord/Slack ทันทีเมื่อเกิดวิกฤต Rollback |
+| **2** | **Pre-merge Code Review & Notification** | ทุก PR ต้องผ่านการ Review อย่างน้อย 1 คน และแจ้งทีมก่อนกด Merge เข้า branch `main` เพื่อป้องกัน Deployment Clashes |
+| **3** | **Environment Variables Verification** | ตรวจสอบ `DATABASE_URL` (Pooled host พร้อม `-pooler`) และ `DIRECT_URL` (Direct host) ครบทั้ง 3 Scopes (Production, Preview, Development) บน Vercel Dashboard |
+| **4** | **Preview Deployment CRUD Verification** | ต้องเปิด Vercel Preview Link จาก Pull Request แล้วทดสอบฟังก์ชัน CRUD (Create, Read, Update, Delete) ครบถ้วนก่อนอนุมัติให้ Merge |
+| **5** | **Database Migration & Schema Sync** | ตรวจสอบว่า Prisma Schema บน Neon DB ได้รับการรัน `prisma db push` / `prisma migrate deploy` สอดคล้องกับโค้ดใหม่เรียบร้อยแล้วก่อนขึ้น Production |
+
+### 2. สรุปความพร้อมและการวิเคราะห์ความเสี่ยง (Final Project Readiness Summary)
+> **สรุปภาพรวมความพร้อมของ `my-blog`**: โปรเจกต์มีความพร้อมในการเป็นฐานรากสำหรับ Final Project (Week 13-15) เนื่องจากมีระบบ Automated CI/CD ผ่าน GitHub ↔ Vercel และเชื่อมต่อ Neon PostgreSQL Database ที่รองรับ Connection Pooling เรียบร้อยแล้ว  
+> **จุดที่ยังกังวล / ข้อควรระวัง**:
+> 1. **Database Connection Limits**: ต้องระวังเรื่อง Connection Limit เมื่อมีผู้ใช้งานเข้าพร้อมกันหลายคน โดยปฏิบัติตามหลักการใช้ Pooled URL (`-pooler`) เป็นหลักสำหรับ Vercel Serverless Functions
+> 2. **Environment Variable Redeployment**: การแก้ไข Env Var บน Vercel ต้องกด **Redeploy** เสมอเพื่อบังคับ Build Cycle ใหม่ ไม่เช่นนั้นระบบจะยังใช้ค่าเดิมส่งผลให้เกิด Bug ใน Production
+> 3. **Instant Rollback Safety**: ในช่วง Sprint ที่มีการเปลี่ยนโค้ดถี่และมีเสี่ยง Deploy พัง หากเกิด Runtime Error ใน Production สามารถกด **Promote to Production** จาก Deployment ที่สมบูรณ์ก่อนหน้าได้ทันทีภายในไม่กี่วินาที
