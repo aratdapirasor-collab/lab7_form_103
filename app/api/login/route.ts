@@ -1,24 +1,74 @@
-// app/api/login/route.ts
+import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import { findUserByEmail } from '@/lib/userService';
 
 export async function POST(request: Request) {
-  // 1. รับค่า email และ password จากหน้าเว็บ
-  const { email, password } = await request.json();
+  try {
+    const body = await request.json();
 
-  // 2. ค้นหา User จากอีเมลด้วย findUserByEmail
-  const user = await findUserByEmail(email);
+    const email = body.email?.trim().toLowerCase();
+    const password = body.password;
 
-  // 3. เปรียบเทียบรหัสผ่านที่พิมพ์เข้ามา กับ Hash ใน DB ด้วย bcrypt.compare
-  const isValid = user && (await bcrypt.compare(password, user.password));
+    // ตรวจสอบว่ากรอกข้อมูลครบหรือไม่
+    if (!email || !password) {
+      return NextResponse.json(
+        { message: 'กรุณากรอกอีเมลและรหัสผ่าน' },
+        { status: 400 }
+      );
+    }
 
-  // ถ้าไม่ถูกต้อง ให้ส่ง Error 401 กลับไป
-  if (!isValid) {
-    return Response.json({ error: 'อีเมล/รหัสผ่านไม่ถูกต้อง' }, { status: 401 });
+    // ค้นหา User จาก Prisma Database
+    const user = await findUserByEmail(email);
+
+    // ไม่พบ User
+    if (!user) {
+      return NextResponse.json(
+        { message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' },
+        { status: 401 }
+      );
+    }
+
+    // ตรวจสอบรหัสผ่านกับ bcrypt
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    // รหัสผ่านไม่ถูกต้อง
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' },
+        { status: 401 }
+      );
+    }
+
+    // Login สำเร็จ
+    const response = NextResponse.json(
+      {
+        message: 'เข้าสู่ระบบสำเร็จ',
+        user: {
+          id: user.id,
+          email: user.email,
+        },
+      },
+      { status: 200 }
+    );
+
+    // สร้าง session cookie
+    response.cookies.set('session', user.id, {
+      httpOnly: true,
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    });
+
+    return response;
+  } catch (error) {
+    console.error('Login error:', error);
+
+    return NextResponse.json(
+      { message: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' },
+      { status: 500 }
+    );
   }
-
-  // 4. ถ้าถูกต้อง สร้าง Cookie Session และส่ง ok: true กลับไป
-  const res = Response.json({ ok: true });
-  res.headers.set('Set-Cookie', `session=${user.id}; Path=/; HttpOnly; Secure; SameSite=Strict`);
-  return res;
 }

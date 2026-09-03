@@ -1,14 +1,9 @@
-// lib/userService.ts
-
+import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcrypt';
-import { prisma } from './prisma';
 import { changePasswordSchema } from './schemas';
 import { ValidationError, NotFoundError } from './errors';
 import { ZodError } from 'zod';
 
-// ========================================
-// ค้นหา User จาก Email สำหรับ Login
-// ========================================
 export async function findUserByEmail(email: string) {
   return await prisma.user.findUnique({
     where: {
@@ -17,14 +12,10 @@ export async function findUserByEmail(email: string) {
   });
 }
 
-// ========================================
-// เปลี่ยนรหัสผ่านของ User
-// ========================================
 export async function changeUserPassword(
   userId: string,
   rawInput: unknown
 ) {
-  // 1. Validation ข้อมูลด้วย Zod (R4)
   let validatedInput;
 
   try {
@@ -39,7 +30,6 @@ export async function changeUserPassword(
 
   const { oldPassword, newPassword } = validatedInput;
 
-  // 2. ดึงข้อมูล User จาก DB ผ่าน Prisma (R2)
   const user = await prisma.user.findUnique({
     where: {
       id: userId,
@@ -52,7 +42,6 @@ export async function changeUserPassword(
     );
   }
 
-  // 3. ตรวจสอบรหัสผ่านเดิมด้วย bcrypt (R1)
   const isOldPasswordValid = await bcrypt.compare(
     oldPassword,
     user.password
@@ -62,13 +51,11 @@ export async function changeUserPassword(
     throw new ValidationError('รหัสผ่านเดิมไม่ถูกต้อง');
   }
 
-  // 4. เข้ารหัสรหัสผ่านใหม่ด้วย bcrypt
   const hashedNewPassword = await bcrypt.hash(
     newPassword,
     10
   );
 
-  // 5. บันทึกรหัสผ่านใหม่ลงฐานข้อมูล
   await prisma.user.update({
     where: {
       id: userId,
@@ -81,4 +68,4 @@ export async function changeUserPassword(
   return {
     success: true,
   };
-}
+}
