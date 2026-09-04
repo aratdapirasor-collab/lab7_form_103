@@ -28,6 +28,8 @@ export default async function Home() {
     <div>
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white/90 p-8 shadow-[0_28px_70px_-30px_rgba(37,99,235,0.4)] sm:p-12">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+          
+          {/* ฝั่งซ้าย */}
           <div>
             <span className="inline-flex rounded-full bg-sky-100 px-4 py-1 text-sm font-semibold uppercase tracking-[0.3em] text-sky-700">
               บล็อกโพสต์
@@ -60,6 +62,7 @@ export default async function Home() {
             </div>
           </div>
 
+          {/* ฝั่งขวา */}
           <div className="rounded-[1.75rem] bg-gradient-to-br from-slate-50 via-sky-50 to-white p-6 shadow-inner shadow-slate-200/50">
             <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-sm">
               <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">
@@ -89,7 +92,7 @@ export default async function Home() {
 
         {/* L2 Preview Deployment Test */}
         <p className="mt-8 text-center text-sm font-semibold text-sky-600">
-          Preview Deployment Test
+          Preview Deployment Test - Week 12
         </p>
       </section>
     </div>
