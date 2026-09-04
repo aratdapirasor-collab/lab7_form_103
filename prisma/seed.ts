@@ -4,10 +4,8 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
-  // Hash รหัสผ่านก่อนเซฟ
-  const hashedPassword = await bcrypt.hash('123456', 10);
+  const hashedPassword = await bcrypt.hash('admin1234', 10);
 
-  // สร้าง/อัปเดต Admin ด้วยอีเมล @tsu.ac.th
   await prisma.user.upsert({
     where: { email: 'admin@tsu.ac.th' },
     update: {
