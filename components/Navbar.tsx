@@ -15,6 +15,7 @@ const links = [
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+
   const [loggedIn, setLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -64,7 +65,7 @@ export default function Navbar() {
         method: 'POST',
       });
     } catch {
-      // ignore and still clear local state
+      // ถ้า API logout มีปัญหา ก็ยังเปลี่ยนสถานะหน้าเว็บ
     }
 
     setLoggedIn(false);
@@ -91,9 +92,8 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`transition-colors hover:text-blue-600 ${
-                    isActive ? 'text-blue-600' : 'text-slate-600'
-                  }`}
+                  className={`transition-colors hover:text-blue-600 ${isActive ? 'text-blue-600' : 'text-slate-600'
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -113,12 +113,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={handleLogout}
-            disabled={!loggedIn && !loading}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-              loggedIn
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-            } ${loading ? 'opacity-70' : ''}`}
+            className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
           >
             Logout
           </button>
