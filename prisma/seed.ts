@@ -17,7 +17,18 @@ async function main() {
     },
   });
 
-  console.log('Admin account: admin@tsu.ac.th');
+  await prisma.user.upsert({
+    where: { email: 'admin@gmail.com' },
+    update: {
+      password: hashedPassword,
+    },
+    create: {
+      email: 'admin@gmail.com',
+      password: hashedPassword,
+    },
+  });
+
+  console.log('Admin accounts seeded: admin@tsu.ac.th, admin@gmail.com');
 }
 
 main()
